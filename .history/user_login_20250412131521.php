@@ -2,29 +2,31 @@
 session_start();
 include('database/connect2.php');
 
-if (isset($_POST["btnlogin"])) {
+if (isset($_POST['btnlogin'])) {
+  $email = $conn->real_escape_string($_POST['txtemail']);
+  $password = $_POST['txtpassword'];
 
-    $email = $_POST['txtemail'];
-    $code = $_POST['txtcode'];
+  $stmt = $conn->prepare("SELECT u.id, u.email, u.password, u.school_id, s.code AS school_code
+                          FROM users u
+                          LEFT JOIN schools s ON u.school_id = s.id
+                          WHERE u.email = ? LIMIT 1");
+  $stmt->bind_param("s", $email,$school_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
-    // Check if email and code exist in schools table
-    $sql = "SELECT * FROM schools WHERE email = ? AND code = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $email, $code);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        // Login successful, redirect to dashboard
-        $_SESSION['school_id'] = $result->fetch_assoc()['id'];
-        $_SESSION['school_code'] = $result->fetch_assoc()['code'];
-
-        header('Location: Admin/index');
-        exit;
-     } else {
-        // Login failed, display error message
-        $_SESSION['error'] = 'Invalid email or code. Please try again.';
+  if ($user = $result->fetch_assoc()) {
+    if (password_verify($password, $user['password'])) {
+      $_SESSION['user_id'] = $user['id'];
+      $_SESSION['email'] = $user['email'];
+      $_SESSION['role'] = $user['role'];
+      $_SESSION['name'] = $user['name'];
+      header("Location: index"); // or wherever the user should land
+    } else {
+      $_SESSION['error'] = "Invalid password!";
     }
+  } else {
+    $_SESSION['error'] = "No user found with this email.";
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -85,8 +87,8 @@ if (isset($_POST["btnlogin"])) {
         </div>
 
         <div class="mb-3">
-          <label for="phone" class="form-label">Code</label>
-          <input type="number" class="form-control" name="txtcode"  required>
+          <label for="phone" class="form-label">Password</label>
+          <input type="password" class="form-control" name="txtpassword"  required>
         </div>
            
         <div class="d-grid">
