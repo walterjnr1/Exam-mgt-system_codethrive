@@ -61,7 +61,7 @@
               
               
               <li class="nav-item">
-                <a href="user_record" class="nav-link">
+                <a href="pages/layout/fixed-footer.html" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>User Record</p>
                 </a>
